@@ -1,1 +1,136 @@
+<!DOCTYPE html>
+<html lang="sq">
+<head>
+    <meta charset="UTF-8">
+    <title>Sistemi Final i Vijueshmërisë</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; font-size: 11px; background: #f4f7f6; padding: 10px; }
+        .container { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 0 20px rgba(0,0,0,0.1); overflow-x: auto; }
+        h2 { text-align: center; color: #2c3e50; margin-bottom: 10px; }
+        table { border-collapse: collapse; width: 100%; min-width: 1600px; }
+        th, td { border: 1px solid #bdc3c7; text-align: center; padding: 3px; }
+        th { background-color: #2c3e50; color: white; height: 35px; }
+        .header-days { background-color: #ecf0f1; color: #2c3e50; width: 28px; }
+        .name-col { min-width: 150px; text-align: left; padding-left: 5px; background: #fdfdfd; }
+        input { width: 90%; border: none; text-align: center; font-size: 11px; font-weight: bold; background: transparent; text-transform: uppercase; }
+        
+        /* Ngjyrat e kolonave të rezultateve */
+        .total-col { background-color: #f1c40f; font-weight: bold; }
+        .day-col { background-color: #3498db; color: white; }
+        .evening-col { background-color: #9b59b6; color: white; }
+        .night-col { background-color: #27ae60; color: white; }
+        .al-col { background-color: #81ecec; font-weight: bold; }
+        .sl-col { background-color: #fab1a0; font-weight: bold; }
+        
+        /* Ngjyrat brenda tabeles kur shkruan kodet */
+        .off-cell { background-color: #dcdde1 !important; }
+        .sick-cell { background-color: #fab1a0 !important; }
+        .al-cell { background-color: #81ecec !important; }
+    </style>
+</head>
+<body>
 
+<div class="container">
+    <h2>Tabela e Vijueshmërisë - Llogaritje Automatike</h2>
+    <table id="attendanceTable">
+        <thead>
+            <tr>
+                <th rowspan="2">Nr.</th>
+                <th rowspan="2" class="name-col">Emri dhe Mbiemri</th>
+                <th rowspan="2">Letërnjoftimi</th>
+                <script>
+                    for(let i=1; i<=31; i++) document.write(`<th class="header-days">${i}</th>`);
+                </script>
+                <th rowspan="2" class="total-col">TOTALI<br>(Orë)</th>
+                <th rowspan="2" class="day-col">DITË<br>(8)</th>
+                <th rowspan="2" class="evening-col">MBRËMJE<br>(16)</th>
+                <th rowspan="2" class="night-col">NATË<br>(00/8)</th>
+                <th rowspan="2" class="al-col">P. VJETOR<br>(AL)</th>
+                <th rowspan="2" class="sl-col">P. MJEKËSOR<br>(SL)</th>
+            </tr>
+            <tr>
+                <script>
+                    const ditet = ["H", "M", "M", "E", "P", "SH", "D"];
+                    for(let i=0; i<31; i++) document.write(`<th style="background: #95a5a6; font-size:9px">${ditet[i % 7]}</th>`);
+                </script>
+            </tr>
+        </thead>
+        <tbody>
+            <script>
+                for(let r=1; r<=15; r++) {
+                    document.write(`
+                        <tr>
+                            <td>${r}</td>
+                            <td class="name-col"><input type="text" placeholder="Emri Mbiemri"></td>
+                            <td><input type="text" placeholder="ID"></td>
+                            ${Array(31).fill().map(() => `<td><input type="text" class="ora-input"></td>`).join('')}
+                            <td class="total-cell total-col">0</td>
+                            <td class="day-cell day-col">0</td>
+                            <td class="evening-cell evening-col">0</td>
+                            <td class="night-cell night-col">0</td>
+                            <td class="al-count al-col">0</td>
+                            <td class="sl-count sl-col">0</td>
+                        </tr>
+                    `);
+                }
+            </script>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    document.addEventListener('input', function (e) {
+        if (e.target.classList.contains('ora-input')) {
+            const input = e.target;
+            const value = input.value.toUpperCase().trim();
+            const parent = input.parentElement;
+            
+            // Ngjyrosja e kutisë sipas kodit
+            parent.className = ""; 
+            if (value === 'OFF') parent.classList.add('off-cell');
+            if (value === 'SL') parent.classList.add('sick-cell');
+            if (value === 'AL') parent.classList.add('al-cell');
+
+            const row = input.closest('tr');
+            const inputs = row.querySelectorAll('.ora-input');
+            
+            let totalGeneral = 0;
+            let totalDite = 0;
+            let totalMbremje = 0;
+            let totalNate = 0;
+            let countAL = 0;
+            let countSL = 0;
+
+            inputs.forEach(inp => {
+                let v = inp.value.toUpperCase().trim();
+                
+                if (v === "8") {
+                    totalDite += 8;
+                    totalGeneral += 8;
+                } else if (v === "16") {
+                    totalMbremje += 8;
+                    totalGeneral += 8;
+                } else if (v === "00/8") {
+                    totalNate += 8;
+                    totalGeneral += 8;
+                } else if (v === "AL") {
+                    countAL++;
+                } else if (v === "SL") {
+                    countSL++;
+                } else if (!isNaN(v) && v !== "") {
+                    totalGeneral += parseFloat(v);
+                }
+            });
+
+            row.querySelector('.total-cell').textContent = totalGeneral;
+            row.querySelector('.day-cell').textContent = totalDite;
+            row.querySelector('.evening-cell').textContent = totalMbremje;
+            row.querySelector('.night-cell').textContent = totalNate;
+            row.querySelector('.al-count').textContent = countAL + " ditë";
+            row.querySelector('.sl-count').textContent = countSL + " ditë";
+        }
+    });
+</script>
+
+</body>
+</html>
